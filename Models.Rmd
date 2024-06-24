@@ -391,6 +391,136 @@ table(Y.test, LDA.pred)
 
 The classification rate using LDA was slightly higher than with QDA, but QDA adjusted better for the minority classes Poor and Great that did not have many observations. Due to the fact that QDA is more optimal when data is not normally distributed within each class, as is the case with our data, I would opt to use the QDA model as the final model. 
 
+#### Random Forest
+```{r}
+rf_wine = randomForest(quality ~ ., data = Wine_training, mtry = 5,
+importance = TRUE)
+
+rf_wine
+```
+
+```{r}
+importance(rf_wine)
+```
+
+```{r}
+varImpPlot(rf_wine)
+```
+We can see alcohol content had much more impact on our initial model
+Now let us see how the model performs on our test dataset
+```{r}
+Yhat <- predict(rf_wine, newdata = Wine_testing)
+table(Yhat, Wine_testing$quality)
+```
+```{r}
+mean(Yhat != Wine_testing$quality) 
+```
+
+##### Model Tuning - Just Mtry
+```{r}
+# establish the train control
+train_control <- trainControl(method = "cv", number = 5)
+
+# Grid of mtry values
+tune_grid <- expand.grid(mtry = seq(1, 10, by = 1))
+
+rf_wine_cv <- train(
+  quality ~ .,
+  data = Wine_training,
+  method = "rf",
+  trControl = train_control,
+  tuneGrid = tune_grid,
+  ntree = 500 
+)
+```
+
+
+```{r}
+rf_wine_cv
+```
+```{r}
+predictions <- predict(rf_wine_cv, newdata = Wine_testing)
+confusion_matrix <- confusionMatrix(predictions, Wine_testing$quality)
+print(confusion_matrix)
+```
+##### RF Model Tuning - Mtry and Ntree
+```{r}
+# Set up training control
+train_control <- trainControl(method = "cv", number = 5)
+
+# Define the grid for mtry
+mtry_grid <- expand.grid(mtry = seq(1, 6, by = 1))
+
+# Function to train and evaluate Random Forest with a specific ntree
+train_rf_with_ntree <- function(ntree_value) {
+  set.seed(123)  # For reproducibility
+  rf_model <- train(
+    quality ~ ., 
+    data = Wine_training,
+    method = "rf",
+    trControl = train_control,
+    tuneGrid = mtry_grid,
+    ntree = ntree_value
+  )
+  return(rf_model)
+}
+
+# Define a range of ntree values to try
+ntree_values <- seq(100, 1000, by = 100)
+
+# Train and store results for each ntree value
+results <- list()
+for (ntree in ntree_values) {
+  results[[as.character(ntree)]] <- train_rf_with_ntree(ntree)
+}
+
+# Extract the best model based on accuracy
+best_model <- NULL
+best_accuracy <- 0
+
+for (ntree in names(results)) {
+  model <- results[[ntree]]
+  accuracy <- max(model$results$Accuracy)
+  if (accuracy > best_accuracy) {
+    best_accuracy <- accuracy
+    best_model <- model
+  }
+}
+
+# Print the best model and its parameters
+print(best_model)
+```
+```{r}
+best_model
+```
+```{r}
+# Evaluate the best model on the test set
+predictions <- predict(best_model, newdata = Wine_testing)
+confusion_matrix <- confusionMatrix(predictions, Wine_testing$quality)
+print(confusion_matrix)
+```
+
+```{r}
+# This will show us the progress of our results as we move from 100 to 1000 n trees
+results
+```
+As we can see - ntrees did not change the variable that much so we are still using mtry = 2 with the default ntree = 500
+```{r}
+# Final RF model
+rf_wine_final = randomForest(quality ~ ., data = Wine_training, mtry = 2,
+importance = TRUE)
+
+rf_wine_final
+```
+
+```{r}
+importance(rf_wine)
+```
+
+```{r}
+varImpPlot(rf_wine)
+```
+
 
 
 
