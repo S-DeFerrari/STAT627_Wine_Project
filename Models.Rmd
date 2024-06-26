@@ -392,6 +392,8 @@ table(Y.test, LDA.pred)
 The classification rate using LDA was slightly higher than with QDA, but QDA adjusted better for the minority classes Poor and Great that did not have many observations. Due to the fact that QDA is more optimal when data is not normally distributed within each class, as is the case with our data, I would opt to use the QDA model as the final model. 
 
 #### Random Forest
+For the Random Forest model, we are going to use every variable available to us. Random Forest models are particularly good at handling multi-collinearity so while we did note some during our EDA, we can rest assured that it wont be a serious problem for this specific type of model.
+
 ```{r}
 rf_wine = randomForest(quality ~ ., data = Wine_training, mtry = 5,
 importance = TRUE)
@@ -417,6 +419,8 @@ mean(Yhat != Wine_testing$quality)
 ```
 
 ##### Model Tuning - Just Mtry
+Let's try and tune our model just on the Mtry hyper-parameter using cross-validation to explore different values and see what our best result is.
+
 ```{r}
 # establish the train control
 train_control <- trainControl(method = "cv", number = 5)
@@ -434,7 +438,6 @@ rf_wine_cv <- train(
 )
 ```
 
-
 ```{r}
 rf_wine_cv
 ```
@@ -443,7 +446,11 @@ predictions <- predict(rf_wine_cv, newdata = Wine_testing)
 confusion_matrix <- confusionMatrix(predictions, Wine_testing$quality)
 print(confusion_matrix)
 ```
+Our best model is with the mtry set to 2. But what about the Ntree hyper-parameter?
+
 ##### RF Model Tuning - Mtry and Ntree
+Let's try testing how our model performs with both different Mtry values and different Ntree values.
+
 ```{r}
 # Set up training control
 train_control <- trainControl(method = "cv", number = 5)
