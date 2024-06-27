@@ -267,6 +267,19 @@ multinom_bestAIC_accuracy <- sum(multinom_bestAIC_predictions == Wine_testing$qu
 print(paste("Multinomial Log-linear Model Accuracy with best AIC:", multinom_bestAIC_accuracy))
 ```
 
+We employed a multinomial log-linear model since the response variable has more than two categories. The full model, with all predictors, achieved an accuracy of 77%. When we reduced the model by excluding correlated variables such as residual sugar, total sulfur dioxide, density, and pH, the accuracy slightly decreased to 76%. However, this reduction led to an increase in the Akaike Information Criterion (AIC), indicating a worse fit.
+
+To optimize the model, we performed stepwise selection. The best model, determined by the lowest AIC of 4810, excluded only the variable chlorides. This refined model slightly improved prediction accuracy on the testing set to 77.41%.
+
+To summarize the results of the multinomial log-linear model:
+
+- Full model test accuracy: 77%
+- Reduced model test accuracy: 76%, AIC increased
+- Best stepwise model AIC: 4810 (excluding chlorides)
+- Best stepwise model test accuracy: 77.41%
+
+The stepwise selection process helped us achieve a model with a slightly higher prediction accuracy and a lower AIC. However, it is also important to note that this model retains the correlated predictors. This demonstrates the trade-off between model complexity and performance, as removing correlated variables simplifies the model but can slightly compromise accuracy. Given that the difference in prediction accuracy between these models is not significant, it might be better to use the reduced model as it is less flexible and thus potentially more robust.
+
 ```{r}
 # KNN Model with 3 neighbors 
 set.seed(123)
